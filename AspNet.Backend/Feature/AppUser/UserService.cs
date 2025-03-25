@@ -1,5 +1,6 @@
 using AspNet.Backend.Feature.Email;
 using AspNet.Backend.Feature.Frontend;
+using AspNet.Backend.Feature.Player;
 using AspNet.Backend.Feature.Shared;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,7 @@ public class UserService(
     IOptions<FrontendSettings> frontendSettings,
     AppDbContext context, 
     UserManager<User> userManager,
+    PlayerService playerService,
     EmailService emailService
 )
 {
@@ -99,13 +101,15 @@ public class UserService(
             };   
         }
         
+        var createdPlayer = await playerService.CreatePlayerAsync(user, user.UserName);
+        
         // Send Confirmation-Email
         var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
         
         //var confirmationLink = Url.Action("ConfirmEmail", "Authenticate", new { userId = user.Id, token }, Request.Scheme);
         var confirmationLink = $"{frontendSettings.Value.ConfirmEmailUrl}?email={Uri.EscapeDataString(user.Email)}&token={Uri.EscapeDataString(token)}";
-        
         await emailService.SendConfirmEmail(user.Email, user.UserName, confirmationLink!);
+        
         return new Response<User>
         {
             Result = new Result { Success = true },

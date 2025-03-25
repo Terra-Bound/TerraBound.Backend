@@ -1,4 +1,5 @@
 using AspNet.Backend.Feature.AppUser;
+using AspNet.Backend.Feature.Player;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        
+        modelBuilder.Entity<Player>().HasKey(x => x.Id);
+        
+        modelBuilder.Entity<Player>()
+            .Property(p => p.Username)
+            .IsRequired();
+
+        modelBuilder.Entity<Player>()
+            .Property(p => p.Type)
+            .IsRequired();
     }
     
     /// <summary>
@@ -53,4 +64,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             }
         }
     }
+    
+    public DbSet<Player> Players { get; set; }
 }

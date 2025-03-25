@@ -168,7 +168,12 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="Frontend\dist\" />
       <Folder Include="wwwroot\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Frontend\dist\_app\version.json" />
     </ItemGroup>
 
 </Project>

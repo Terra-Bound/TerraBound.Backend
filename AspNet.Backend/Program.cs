@@ -1,9 +1,11 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 using AspNet.Backend.Feature.AppUser;
+using AspNet.Backend.Feature.Authentication;
 using AspNet.Backend.Feature.Background;
 using AspNet.Backend.Feature.Email;
 using AspNet.Backend.Feature.Frontend;
+using AspNet.Backend.Feature.Player;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -36,8 +38,10 @@ public class Program
         // Custom services
         builder.Services.AddScoped<EmailTemplateRenderer>();
         builder.Services.AddScoped<EmailSender>();
+        builder.Services.AddScoped<AuthenticationService>();
         builder.Services.AddScoped<UserService>();
         builder.Services.AddScoped<EmailService>();
+        builder.Services.AddScoped<PlayerService>();
         builder.Services.AddHostedService<GameLoopService>();
         
         builder.Services.AddOpenTelemetry()
@@ -113,6 +117,18 @@ public class Program
         // Conditional logic for development environment (optional)
         if (builder.Environment.IsDevelopment())
         {
+            
+            // Disable cors by allowing from all origins
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin() 
+                        .AllowAnyMethod()
+                        .AllowAnyHeader();
+                });
+            });
+            
             builder.Services.AddSwaggerGen(setup =>
             {
                 // Include 'SecurityScheme' to use JWT Authentication
@@ -165,11 +181,15 @@ public class Program
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapControllers();
+        app.MapHealthChecks("/health");
         
         // Serve static files for frontend (svelte)
         app.UseDefaultFiles();
         app.UseStaticFiles();
         app.MapFallbackToFile("index.html"); // SPA-Support
+        
+        // Allow all cors
+        app.UseCors("AllowAll");  // Middleware aktivieren
         
         app.Run();
     }

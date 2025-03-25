@@ -61,7 +61,7 @@ This will:
    ```
    
 #### Running Frontend Locally (Without Docker)
-1. **Build the Svelte frontend**
+1. **Build the Svelte frontend (Node 20 required)**
    ```sh
    cd Frontend
    npm install
