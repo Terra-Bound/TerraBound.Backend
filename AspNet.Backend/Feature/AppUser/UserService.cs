@@ -1,6 +1,6 @@
 using AspNet.Backend.Feature.Email;
 using AspNet.Backend.Feature.Frontend;
-using AspNet.Backend.Feature.Player;
+using AspNet.Backend.Feature.Character;
 using AspNet.Backend.Feature.Shared;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +19,7 @@ public class UserService(
     IOptions<FrontendSettings> frontendSettings,
     AppDbContext context, 
     UserManager<User> userManager,
-    PlayerService playerService,
+    CharacterService characterService,
     EmailService emailService
 )
 {
@@ -101,7 +101,7 @@ public class UserService(
             };   
         }
         
-        var createdPlayer = await playerService.CreatePlayerAsync(user, user.UserName);
+        var createdPlayer = await characterService.CreateCharacterAsync(user, user.UserName);
         
         // Send Confirmation-Email
         var token = await userManager.GenerateEmailConfirmationTokenAsync(user);

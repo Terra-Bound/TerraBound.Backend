@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Identity;
-using Player = AspNet.Backend.Feature.Player.Player;
 
 namespace AspNet.Backend.Feature.AppUser;
 
@@ -42,5 +41,5 @@ public class User : IdentityUser
     public DateTime RegisterDate { get; set; }
     public DateTime? LastLoginDate { get; set; }
     
-    public Player.Player Player { get; set; }
+    public Character.CharacterModel CharacterModel { get; set; }
 }

@@ -1,5 +1,5 @@
 using AspNet.Backend.Feature.AppUser;
-using AspNet.Backend.Feature.Player;
+using AspNet.Backend.Feature.Character;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -12,15 +12,24 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     {
         base.OnModelCreating(modelBuilder);
         
-        modelBuilder.Entity<Player>().HasKey(x => x.Id);
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.CharacterModel)
+            .WithOne()
+            .HasForeignKey<CharacterModel>(p => p.User) 
+            .OnDelete(DeleteBehavior.Cascade); 
         
-        modelBuilder.Entity<Player>()
+        // Player config
+        modelBuilder.Entity<CharacterModel>().HasKey(x => x.Id);
+        modelBuilder.Entity<CharacterModel>()
             .Property(p => p.Username)
+            .HasMaxLength(16)
             .IsRequired();
-
-        modelBuilder.Entity<Player>()
+        modelBuilder.Entity<CharacterModel>()
             .Property(p => p.Type)
+            .HasMaxLength(16)
             .IsRequired();
+        modelBuilder.Entity<CharacterModel>()
+            .OwnsOne(p => p.TransformModel); 
     }
     
     /// <summary>
@@ -65,5 +74,5 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         }
     }
     
-    public DbSet<Player> Players { get; set; }
+    public DbSet<CharacterModel> Players { get; set; }
 }

@@ -222,4 +222,41 @@ public class AuthenticationService(
             signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
         );
     }
+    
+    /// <summary>
+    /// Checks whether an JWT-Token is valid or not. 
+    /// </summary>
+    /// <param name="token">The token.</param>
+    /// <param name="claims">The claims.</param>
+    /// <returns></returns>
+    public bool IsValidJwtToken(string token, out ClaimsPrincipal claims)
+    {
+        claims = null;
+
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.UTF8.GetBytes(configuration["JWT:Secret"]);
+
+        var validationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidateIssuer = true,
+            ValidIssuer = configuration["JWT:ValidIssuer"],
+            ValidateAudience = true,
+            ValidAudience = configuration["JWT:ValidAudience"],
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero 
+        };
+
+        try
+        {
+            claims = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
+            return validatedToken is JwtSecurityToken jwtToken &&
+                   jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase);
+        }
+        catch
+        {
+            return false; 
+        }
+    }
 }

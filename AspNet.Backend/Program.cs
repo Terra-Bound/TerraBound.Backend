@@ -5,7 +5,7 @@ using AspNet.Backend.Feature.Authentication;
 using AspNet.Backend.Feature.Background;
 using AspNet.Backend.Feature.Email;
 using AspNet.Backend.Feature.Frontend;
-using AspNet.Backend.Feature.Player;
+using AspNet.Backend.Feature.Character;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -41,7 +41,8 @@ public class Program
         builder.Services.AddScoped<AuthenticationService>();
         builder.Services.AddScoped<UserService>();
         builder.Services.AddScoped<EmailService>();
-        builder.Services.AddScoped<PlayerService>();
+        builder.Services.AddScoped<CharacterService>();
+        builder.Services.AddScoped<ServerNetworkService>();
         builder.Services.AddHostedService<GameLoopService>();
         
         builder.Services.AddOpenTelemetry()

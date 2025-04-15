@@ -1,0 +1,3 @@
+[submodule "AspNet.Backend/Core"]
+	path = AspNet.Backend/Core
+	url = https://github.com/Terra-Bound/TerraBound.Core.git
