@@ -18,4 +18,7 @@ public static class Error
     
     // Password
     public const string PasswordResetFailed = "Password reset failed, check details.";
+    
+    // Entity
+    public const string EntityNotFound = "Entity not found";
 }

@@ -197,7 +197,8 @@ public class AuthenticationService(
 
         var claims = new List<Claim>
         {
-            new(ClaimTypes.Name, user.UserName),
+            new(ClaimTypes.NameIdentifier, user.Id),
+            new(ClaimTypes.Email, user.NormalizedEmail ?? ""),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 

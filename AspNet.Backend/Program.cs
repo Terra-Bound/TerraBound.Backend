@@ -2,10 +2,13 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using AspNet.Backend.Feature.AppUser;
 using AspNet.Backend.Feature.Authentication;
-using AspNet.Backend.Feature.Background;
+using AspNet.Backend.Feature.GameLoop;
 using AspNet.Backend.Feature.Email;
 using AspNet.Backend.Feature.Frontend;
 using AspNet.Backend.Feature.Character;
+using AspNet.Backend.Feature.Chunk;
+using AspNet.Backend.Feature.GameLoop;
+using AspNet.Backend.Feature.GameLoop.Feature.Networking;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -39,10 +42,10 @@ public class Program
         builder.Services.AddScoped<EmailTemplateRenderer>();
         builder.Services.AddScoped<EmailSender>();
         builder.Services.AddScoped<AuthenticationService>();
-        builder.Services.AddScoped<UserService>();
         builder.Services.AddScoped<EmailService>();
         builder.Services.AddScoped<CharacterService>();
-        builder.Services.AddScoped<ServerNetworkService>();
+        builder.Services.AddScoped<UserService>();
+        builder.Services.AddSingleton<ServerNetworkService>();
         builder.Services.AddHostedService<GameLoopService>();
         
         builder.Services.AddOpenTelemetry()
@@ -84,10 +87,6 @@ public class Program
         
         // Health check
         builder.Services.AddHealthChecks().AddCheck<HealthCheckService>(nameof(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckService));
-
-        // Connect to PostgreSQL
-        //builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-        builder.Services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("teste"));
         
         // Add identity to efcore
         builder.Services.AddIdentity<User, IdentityRole>()
@@ -118,6 +117,8 @@ public class Program
         // Conditional logic for development environment (optional)
         if (builder.Environment.IsDevelopment())
         {
+            // Use in-memory database for local development
+            builder.Services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("InMemoryDb"));
             
             // Disable cors by allowing from all origins
             builder.Services.AddCors(options =>
@@ -155,6 +156,11 @@ public class Program
                     { jwtSecurityScheme, Array.Empty<string>() }
                 });
             });
+        }
+        else
+        {
+            // Use PostgreSQL for all other environments (like Docker)
+            builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
         }
 
         // Configure the HTTP request pipeline

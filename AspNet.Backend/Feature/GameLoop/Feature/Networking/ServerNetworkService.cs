@@ -1,12 +1,10 @@
 using System.Security.Claims;
-using System.Threading.Channels;
 using AspNet.Backend.Feature.Authentication;
 using LiteNetLib;
 using LiteNetLib.Utils;
-using TerraBound.Core;
 using TerraBound.Core.Network;
 
-namespace AspNet.Backend.Feature.Background;
+namespace AspNet.Backend.Feature.GameLoop.Feature.Networking;
 
 public delegate void OnConnectionRequest(ConnectionRequest connectionRequest);
 
@@ -20,9 +18,7 @@ public delegate void OnDisconnected(NetPeer peer, DisconnectInfo info);
 /// The <see cref="ServerNetworkService"/> class
 /// represents the networking code for the server.
 /// </summary>
-public class ServerNetworkService(
-    ILogger<ServerNetworkService> logger, AuthenticationService authenticationService
-) : Network {
+public class ServerNetworkService(ILogger<ServerNetworkService> logger, IServiceScopeFactory scopeFactory) : Network {
     
     private const ushort MaxConnections = 10;
 
@@ -72,8 +68,12 @@ public class ServerNetworkService(
     {
         if (Manager.ConnectedPeersCount < MaxConnections)
         {
+            // Get Authenticationscope
+            using var scope = scopeFactory.CreateScope();
+            var authenticationService = scope.ServiceProvider.GetRequiredService<AuthenticationService>();
+            
             // Verify jwt token
-            var jwt = request.Data.ToString();
+            var jwt = request.Data.GetString();
             if (authenticationService.IsValidJwtToken(jwt, out var claims))
             {
                 var userId = claims.FindFirst(ClaimTypes.NameIdentifier)?.Value;

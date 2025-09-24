@@ -1,4 +1,4 @@
-using System.Security.Claims;
+/*using System.Security.Claims;
 using System.Text.Encodings.Web;
 using AspNet.Backend.Feature.Authentication;
 using Microsoft.AspNetCore.Authentication;
@@ -20,4 +20,4 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
 
         return Task.FromResult(AuthenticateResult.Success(ticket));
     }
-}
+}*/

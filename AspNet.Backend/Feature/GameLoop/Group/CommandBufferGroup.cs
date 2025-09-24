@@ -2,7 +2,7 @@ using Arch.Buffer;
 using Arch.Core;
 using Arch.System;
 
-namespace AspNet.Backend.Feature.Background.Systems;
+namespace AspNet.Backend.Feature.GameLoop.Group;
 
 /// <summary>
 ///     A system which contains a <see cref="CommandBuffer" /> which acts as a buffer for entity modifications.

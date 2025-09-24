@@ -8,13 +8,14 @@ services:
       context: .
       dockerfile: AspNet.Backend/Dockerfile
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://*:8080
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=backend-db;Username=admin;Password=pw
     depends_on:
       - postgres
     ports:
-      - "8080:8080"
+      - "8080:8080"  # HTTP
+      - "9050:9050/udp"  # Litenetlib UDP for gameserver
       
   # Database
   postgres:

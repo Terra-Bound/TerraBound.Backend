@@ -1,13 +1,14 @@
 ﻿#############
 # Base Image
 #############
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 
 USER $APP_UID
 WORKDIR /app
 
 EXPOSE 8080
 EXPOSE 8081
+EXPOSE 9050
 
 #############
 # Build Svelte

@@ -40,6 +40,5 @@ public class User : IdentityUser
     public string? LastName { get; set; }
     public DateTime RegisterDate { get; set; }
     public DateTime? LastLoginDate { get; set; }
-    
-    public Character.CharacterModel CharacterModel { get; set; }
+    public Character.CharacterModel? Character { get; set; }
 }

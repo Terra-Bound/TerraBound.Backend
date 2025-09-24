@@ -101,7 +101,8 @@ public class UserService(
             };   
         }
         
-        var createdPlayer = await characterService.CreateCharacterAsync(user, user.UserName);
+        // Create character
+        await characterService.CreateCharacterAsync(user.Id, user.UserName);
         
         // Send Confirmation-Email
         var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
