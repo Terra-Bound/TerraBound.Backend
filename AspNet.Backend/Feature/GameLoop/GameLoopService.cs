@@ -97,14 +97,10 @@ public class GameLoopService : BackgroundService
         _systems = new Group<float>(
             "Systems",
             _eventCommandBufferSystem,
-            new StageGroup(_logger, serviceProvider, _world, _entityMapper, _entityService, _characterEntityService, _chunkEntityService, _networkCommandService),
-            new KeepAliveGroup(_logger, _world),
+            new PreUpdateGroup(_logger, serviceProvider, _world, _entityMapper, _entityService, _characterEntityService, _chunkEntityService, _networkCommandService),
             _entityCommandBufferSystem,
-            new ReactiveSystem(_world),
-            new MovementSystem(_logger, _world),
-            new NetworkSystem(_world, networkService),
-            new DatabaseGroup(dbLogger, serviceProvider, _world),
-            new UnstageGroup(_logger, _world, _characterEntityService, _chunkEntityService)
+            new UpdateGroup(_logger, _world, networkService),
+            new PostUpdateGroup(_logger, dbLogger, serviceProvider, _world, _characterEntityService, _chunkEntityService)
         );
         _systems.Initialize();
     }

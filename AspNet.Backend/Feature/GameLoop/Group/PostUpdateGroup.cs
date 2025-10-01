@@ -9,13 +9,16 @@ namespace AspNet.Backend.Feature.GameLoop.Group;
 /// <summary>
 ///     A system group which cleans up entities and data. 
 /// </summary>
-public sealed class UnstageGroup(
+public sealed class PostUpdateGroup(
     ILogger<GameLoopService> logger,
+    ILogger<DatabaseGroup> dbLogger,
+    IServiceProvider serviceProvider,
     World world,
     CharacterEntityService characterEntityService,
     ChunkEntityService chunkEntityService
 ) : Group<float>(
-    "UnstageGroup",
+    "PostUpdateGroup",
+    new DatabaseGroup(dbLogger, serviceProvider, world),
     new DisposeSystem(world, characterEntityService, chunkEntityService)    // Deinitialize entities
 );
 

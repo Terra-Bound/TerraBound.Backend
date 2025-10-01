@@ -19,7 +19,7 @@ namespace AspNet.Backend.Feature.GameLoop.Group;
 /// <summary>
 ///     A system group which processes commands, initializes entities and applies data. 
 /// </summary>
-public sealed class StageGroup(
+public sealed class PreUpdateGroup(
     ILogger<GameLoopService> logger,
     IServiceProvider provider,
     World world,
@@ -29,19 +29,20 @@ public sealed class StageGroup(
     ChunkEntityService chunkEntityService,
     NetworkCommandService commandService
 ) : Group<float>(
-    "StageGroup",
-    /*new ChunkSystem(logger, provider, world, chunkEntityService), */                                               // Load/Unload chunks
-    new InitialisationSystem(logger, provider, world, entityService, characterEntityService, commandService),    // Initialize entities
-    new CommandGroup(logger, world, mapper)                                                                      // Apply commands to entities and game
+    "PreUpdateGroup",
+    /*new ChunkSystem(logger, provider, world, chunkEntityService), */                                           // Load/Unload chunks
+    new PlayerCommandGroup(logger, provider, world, entityService, characterEntityService, commandService),    // Initialize entities
+    new MovementCommandGroup(logger, world, mapper),                                                                     // Apply commands to entities and game
+    new KeepAliveSystem(world)
 );
 
 /// <summary>
-/// The <see cref="InitialisationSystem"/>
-/// is a system listening to certain events for initialising entities or preparing data.
+/// The <see cref="PlayerCommandGroup"/>
+/// is a system listening to certain player events for (de)initializing on login, reconnect and disconnect. 
 /// </summary>
 /// <param name="world">The <see cref="World"/>.</param>
 /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
-public sealed partial class InitialisationSystem(
+public sealed partial class PlayerCommandGroup(
     ILogger<GameLoopService> logger,
     IServiceProvider serviceProvider,
     World world, 
@@ -126,12 +127,12 @@ public sealed partial class InitialisationSystem(
 }
 
 /// <summary>
-/// The <see cref="CommandGroup"/>
+/// The <see cref="MovementCommandGroup"/>
 /// is a system listening to certain events or networking commands to apply them to the ecs. 
 /// </summary>
 /// <param name="world">The <see cref="World"/>.</param>
 /// <param name="entityMapper">The <see cref="EntityMapper"/>.</param>
-public sealed partial class CommandGroup(
+public sealed partial class MovementCommandGroup(
     ILogger<GameLoopService> logger,
     World world, 
     EntityMapper entityMapper
@@ -250,5 +251,35 @@ public sealed partial class ChunkSystem(
     {
         base.AfterUpdate(in t);
         ChunkService.Dispose();
+    }
+}
+
+/// <summary>
+/// The <see cref="KeepAliveSystem"/>
+/// is a system tracking the keepalive of entities and marking them for destruction later on.
+/// </summary>
+/// <param name="world">The <see cref="World"/>.</param>
+public sealed partial class KeepAliveSystem(
+    World world
+) : BaseSystem<World, float>(world)
+{
+    /// <summary>
+    /// Calculates the remaining keepalive of an entity before marking it for destruction. 
+    /// </summary>
+    /// <param name="deltaTime">The delta time.</param>
+    /// <param name="entity">The entity.</param>
+    /// <param name="keepAlive">Its remaining keepAlive.</param>
+    [Query]
+    private void CalculateRemainingKeepAlive([Data] float deltaTime, Arch.Core.Entity entity, ref DestroyAfter keepAlive)
+    {
+        var deltaMs = (int)(deltaTime * 1000f);
+        keepAlive.Milliseconds -= deltaMs;
+
+        // Mark for destroy
+        if (keepAlive.Milliseconds <= 0)
+        {
+            World.Remove<DestroyAfter>(entity);
+            World.Add<Destroy>(entity);
+        }
     }
 }
