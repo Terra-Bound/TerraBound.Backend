@@ -45,6 +45,7 @@ public class Program
         builder.Services.AddScoped<EmailService>();
         builder.Services.AddScoped<CharacterService>();
         builder.Services.AddScoped<UserService>();
+        builder.Services.AddScoped<ChunkService>();
         builder.Services.AddSingleton<ServerNetworkService>();
         builder.Services.AddHostedService<GameLoopService>();
         
@@ -118,8 +119,8 @@ public class Program
         if (builder.Environment.IsDevelopment())
         {
             // Use in-memory database for local development
-            builder.Services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("InMemoryDb"));
-            
+            builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
             // Disable cors by allowing from all origins
             builder.Services.AddCors(options =>
             {
@@ -161,6 +162,17 @@ public class Program
         {
             // Use PostgreSQL for all other environments (like Docker)
             builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+            
+            // Disable cors by allowing from all origins
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin() 
+                        .AllowAnyMethod()
+                        .AllowAnyHeader();
+                });
+            });
         }
 
         // Configure the HTTP request pipeline

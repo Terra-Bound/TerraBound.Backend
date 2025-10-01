@@ -97,7 +97,7 @@ public class GameLoopService : BackgroundService
         _systems = new Group<float>(
             "Systems",
             _eventCommandBufferSystem,
-            new StageGroup(_logger, serviceProvider, _world, _entityMapper, _entityService, _characterEntityService, _networkCommandService),
+            new StageGroup(_logger, serviceProvider, _world, _entityMapper, _entityService, _characterEntityService, _chunkEntityService, _networkCommandService),
             new KeepAliveGroup(_logger, _world),
             _entityCommandBufferSystem,
             new ReactiveSystem(_world),

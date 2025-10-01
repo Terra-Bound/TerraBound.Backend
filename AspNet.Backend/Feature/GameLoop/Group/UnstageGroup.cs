@@ -48,7 +48,7 @@ public sealed partial class DisposeSystem(
     /// </summary>
     /// <param name="entity">Its instance.</param>
     [Query]
-    [All<TerraBound.Core.Components.Character, Destroy>]
+    [All<TerraBound.Core.Components.Chunk, Destroy>]
     private void DisposeChunk(Entity entity)
     {
         chunkEntityService.Dispose(entity);

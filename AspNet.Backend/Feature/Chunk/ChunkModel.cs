@@ -15,7 +15,7 @@ public struct ChunkDto
     public int X { get; set; }
     public int Y { get; set; }
     public DateTime CreatedDate { get; set; }
-    public required ISet<CharacterDto> Characters { get; set; }
+    public required ISet<CharacterDto> ContainedCharacters { get; set; }
 }
 
 /// <summary>
@@ -32,5 +32,5 @@ public class ChunkModel
     
     public DateTime CreatedDate { get; set; }
   
-    public ISet<CharacterModel> Characters { get; set; } = new HashSet<CharacterModel>(); 
+    public ISet<CharacterModel> ContainedCharacters { get; set; } = new HashSet<CharacterModel>(); 
 }

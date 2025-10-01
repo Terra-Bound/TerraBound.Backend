@@ -42,17 +42,24 @@ public sealed partial class SaveOnCreatedDatabaseSystem(
 
     [Query]
     [All<Created>, None<Destroy>]
-    private void SaveChunksOnCreated(in Identity identity, in TerraBound.Core.Components.Chunk chunk)
+    private void SaveChunksOnCreated(in Identity identity, in TerraBound.Core.Components.Chunk chunkComponent)
     {
         // Add to service
-        var model = ChunkMapper.ToDto(identity, chunk);   
-        ChunkService.Value.UpdateInBulkAsync(model);
-        logger.LogDebug("Saved {Chunk} with {Identity}", chunk, identity);
+        var model = ChunkMapper.ToDto(identity, chunkComponent);   
+        ChunkService.Value.CreateInBulkAsync(model);
+        logger.LogDebug("Saved {Chunk} with {Identity}", chunkComponent, identity);
     }
     
     public override void AfterUpdate(in float t)
     {
         base.AfterUpdate(in t);
+
+        // Skip if ChunkService was not used, prevents memory allocation of a new service.
+        if (!ChunkService.HasValue)
+        {
+            return;
+        }
+        
         ChunkService.Value.SaveChangesInBulkAsync().GetAwaiter().GetResult();
         ChunkService.Dispose();
         logger.LogInformation("Saved created instances");
@@ -83,6 +90,13 @@ public sealed partial class SaveOnDestroyDatabaseSystem(ILogger<DatabaseGroup> l
     public override void AfterUpdate(in float t)
     {
         base.AfterUpdate(in t);
+        
+        // Skip if ChunkService was not used, prevents memory allocation of a new service.
+        if (!CharacterService.HasValue)
+        {
+            return;
+        }
+        
         CharacterService.Value.SaveChangesInBulkAsync().GetAwaiter().GetResult();
         CharacterService.Dispose();
         logger.LogInformation("Saved instances before destruction");
@@ -114,6 +128,13 @@ public sealed partial class IntervalDatabaseSystem(ILogger<DatabaseGroup> logger
     public override void AfterUpdate(in float t)
     {
         base.AfterUpdate(in t);
+        
+        // Skip if ChunkService was not used, prevents memory allocation of a new service.
+        if (!CharacterService.HasValue)
+        {
+            return;
+        }
+        
         CharacterService.Value.SaveChangesInBulkAsync().GetAwaiter().GetResult();
         CharacterService.Dispose();
         logger.LogInformation("Saved updated instances");

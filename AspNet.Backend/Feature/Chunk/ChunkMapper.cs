@@ -46,8 +46,21 @@ public static partial class ChunkMapper
             X = chunk.Grid.X,
             Y = chunk.Grid.Y,
             CreatedDate = DateTime.UtcNow,
-            Characters = new HashSet<CharacterDto>(),
+            ContainedCharacters = new HashSet<CharacterDto>(),
         };
+    }
+
+    /// <summary>
+    /// Maps a <see cref="ChunkDto"/> to its component counterparts: <see cref="Identity"/> and <see cref="TerraBound.Core.Components.Chunk"/>.
+    /// </summary>
+    /// <param name="dto">The source <see cref="ChunkDto"/> to map from.</param>
+    /// <param name="identity">The resulting <see cref="Identity"/> component.</param>
+    /// <param name="chunk">The resulting <see cref="TerraBound.Core.Components.Chunk"/> component.</param>
+    public static void ToComponents(this ChunkDto dto, out Identity identity, out TerraBound.Core.Components.Chunk chunk)
+    {
+        // Create dto
+        identity = new Identity(dto.Id, dto.Type);
+        chunk = new TerraBound.Core.Components.Chunk(dto.X, dto.Y);
     }
     
     /// <summary>
@@ -57,6 +70,7 @@ public static partial class ChunkMapper
     /// <param name="user">The <see cref="User"/>.</param>
     /// <returns>The converted <see cref="CharacterModel"/>.</returns>
     [MapProperty(nameof(ChunkDto.Id), nameof(ChunkModel.IdentityId))]
+    [MapProperty(nameof(ChunkDto.Id), nameof(ChunkModel.Identity.Id))]
     [MapProperty(nameof(ChunkDto.Type), nameof(ChunkModel.Identity.Type))]
     [MapValue(nameof(ChunkModel.Identity), Use = nameof(GetStubIdentity))]  // Alternative pass Identity and User via parameter to the ToEntity method
     public static partial ChunkModel ToEntity(this ChunkDto dto);

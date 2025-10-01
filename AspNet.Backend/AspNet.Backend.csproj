@@ -25,6 +25,7 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.Analyzers" Version="9.0.5" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.5" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.5" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.5" />
         <PackageReference Include="NetTopologySuite" Version="2.6.0" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite" Version="9.0.4" />

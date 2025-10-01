@@ -18,7 +18,13 @@ public class ChunkService(
     AppDbContext context
 )
 {
-    private readonly List<ChunkModel> _chunkModels = new();
+    private readonly List<IdentityModel> _identityModelsToCreate = new();
+    private readonly List<ChunkModel> _chunkModelsToCreate = new();
+    private readonly List<ChunkModel> _chunkModelsToUpdate = new();
+    
+    private readonly BulkConfig _bulkConfig = new BulkConfig {
+        SetOutputIdentity = false 
+    };
 
     /// <summary>
     /// Creates an <see cref="ChunkModel"/>. 
@@ -34,7 +40,7 @@ public class ChunkService(
             X = x,
             Y = y,
             CreatedDate = DateTime.UtcNow,
-            Characters = new HashSet<CharacterModel>()
+            ContainedCharacters = new HashSet<CharacterModel>()
         };
 
         context.Chunks.Add(chunk);
@@ -77,7 +83,7 @@ public class ChunkService(
                 Id = c.IdentityId,
                 X = c.X,
                 Y = c.Y,
-                Characters = c.Characters.Select(character => character.ToDto()).ToHashSet()
+                ContainedCharacters = c.ContainedCharacters.Select(character => character.ToDto()).ToHashSet()
             })
             .ToListAsync()
             .ConfigureAwait(true);
@@ -87,10 +93,21 @@ public class ChunkService(
     /// Updates a <see cref="CharacterModel"/> in bulk, adds it to the local list and updates all of them at once during <see cref="SaveChangesInBulkAsync"/>.
     /// </summary>
     /// <param name="characterDto">The instance.</param>
+    public void CreateInBulkAsync(ChunkDto characterDto)
+    {
+        var model = characterDto.ToEntity();
+        _identityModelsToCreate.Add(model.Identity);
+        _chunkModelsToCreate.Add(model);
+    }
+    
+    /// <summary>
+    /// Updates a <see cref="CharacterModel"/> in bulk, adds it to the local list and updates all of them at once during <see cref="SaveChangesInBulkAsync"/>.
+    /// </summary>
+    /// <param name="characterDto">The instance.</param>
     public void UpdateInBulkAsync(ChunkDto characterDto)
     {
         var model = characterDto.ToEntity();
-        _chunkModels.Add(model);
+        _chunkModelsToUpdate.Add(model);
     }
 
     /// <summary>
@@ -98,7 +115,11 @@ public class ChunkService(
     /// </summary>
     public async ValueTask SaveChangesInBulkAsync()
     {
-        await context.BulkInsertOrUpdateAsync(_chunkModels);
-        _chunkModels.Clear();
+        await context.BulkInsertAsync(_identityModelsToCreate, _bulkConfig);
+        await context.BulkInsertAsync(_chunkModelsToCreate, _bulkConfig);
+        await context.BulkUpdateAsync(_chunkModelsToUpdate, _bulkConfig);
+        _identityModelsToCreate.Clear();
+        _chunkModelsToCreate.Clear();
+        _chunkModelsToUpdate.Clear();
     }
 }

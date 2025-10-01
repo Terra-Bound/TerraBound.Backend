@@ -30,7 +30,7 @@ public class CharacterEntityService(ILogger<CharacterEntityService> logger, Worl
             new NetworkedTransform(Vector2.Zero), 
             new Velocity(Vector2.Zero),
             new Movement(Vector2.Zero, 50f),
-            new ChunkLoader(),
+            new ChunkLoader(1),
             new Toggle<DirtyTransform>(false)
         );
     }

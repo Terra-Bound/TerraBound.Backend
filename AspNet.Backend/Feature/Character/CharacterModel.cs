@@ -1,5 +1,6 @@
 using System.Numerics;
 using AspNet.Backend.Feature.AppUser;
+using AspNet.Backend.Feature.Chunk;
 using AspNet.Backend.Feature.Shared;
 using TerraBound.Core.Components;
 
@@ -9,7 +10,7 @@ namespace AspNet.Backend.Feature.Character;
 /// The <see cref="CharacterDto"/> struct
 /// represents an <see cref="CharacterModel"/> with all his transferable data.
 /// </summary>
-public struct CharacterDto
+public record struct CharacterDto
 {
     public int Id { get; set; }
     public string Type { get; set; }
@@ -29,6 +30,9 @@ public class CharacterModel
     
     public required string Username { get; set; }
     public required TransformModel Transform { get; set; }
+    
+    public int? ChunkId { get; set; }
+    public ChunkModel? Chunk { get; set; }
     
     public required string UserId { get; set; }
     public required User User { get; set; }

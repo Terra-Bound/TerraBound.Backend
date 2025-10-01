@@ -27,6 +27,11 @@ public class Scoped<T>(IServiceProvider serviceProvider) : IDisposable where T :
     }
 
     /// <summary>
+    /// Gets a value indicating whether the instance has been created and is not null.
+    /// </summary>
+    public bool HasValue => _instance != null;
+
+    /// <summary>
     /// Creates the scoped service.
     /// </summary>
     public T Create()

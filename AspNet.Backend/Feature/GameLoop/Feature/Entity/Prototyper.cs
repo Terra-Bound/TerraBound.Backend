@@ -10,6 +10,8 @@ public static class Prototyper
         {
             case "char:1":
                 return CharacterEntityService.CreateTemplate(world);
+            case "chunk:1":
+                return ChunkEntityService.CreateTemplate(world);
             default:
                 return world.Create();
         }

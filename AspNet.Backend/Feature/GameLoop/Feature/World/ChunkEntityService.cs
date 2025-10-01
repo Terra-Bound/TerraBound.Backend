@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using Arch.Core;
 using AspNet.Backend.Feature.Character;
 using AspNet.Backend.Feature.Chunk;
+using AspNet.Backend.Feature.Shared;
 using CommunityToolkit.HighPerformance;
 using TerraBound.Core.Components;
 using TerraBound.Core.Geo;
@@ -28,26 +29,32 @@ public class ChunkEntityService(ILogger<ChunkEntityService> logger, World world,
     {
         return world.Create(
             new Identity(-1, "chunk:1"),
-            new TerraBound.Core.Components.Character()
+            new TerraBound.Core.Components.Chunk()
         );
     }
     
     /// <summary>
     /// Clones and initializes a chunk <see cref="Entity"/>.
     /// </summary>
-    /// <param name="type">Its type.</param>
     /// <param name="chunkDto">Its <see cref="ChunkDto"/>.</param>
     /// <returns></returns>
-    public Arch.Core.Entity Create(string type, ChunkDto chunkDto)
+    public Arch.Core.Entity Create(ChunkDto chunkDto)
     {
-        var entity = Prototyper.Clone(world, type);
-        world.Set(entity, new Identity(chunkDto.Id, chunkDto.Type));
-        world.Set(entity, new TerraBound.Core.Components.Chunk(chunkDto.X, chunkDto.Y));
+        // Convert dto to components
+        chunkDto.ToComponents(out var identity, out var chunk);
         
-        entityService.AddEntity(chunkDto.Id, entity);
-        chunkMapper.Add(new Grid(chunkDto.X, chunkDto.Y), entity);
+        // Create template, assign components
+        var entity = Prototyper.Clone(world, chunkDto.Type);
+        ref var entityData = ref world.GetEntityData(entity);
+        ref var identityData = ref entityData.Get<Identity>();
+        identityData = identity;
+        entityData.Set(chunk);
         
-        logger.LogInformation("Created {Entity}/{Chunk} with {Identity}", entity, chunkDto, chunkDto.Id);
+        // Register entity
+        entityService.AddEntity(ref identityData, entity);
+        chunkMapper.Add(chunk.Grid, entity);
+        
+        logger.LogInformation("Created Chunk: {Entity}/{Chunk} with Id {Id}", entity, chunkDto, identity.Id);
         return entity;
     }
 
@@ -65,7 +72,7 @@ public class ChunkEntityService(ILogger<ChunkEntityService> logger, World world,
         entityService.RemoveEntity(identity.Id);
         chunkMapper.Remove(chunk.Grid);
         
-        logger.LogInformation("Disposed {Entity}/{Chunk} with {Identity}", entity, chunk, identity);
+        logger.LogInformation("Disposed Chunk: {Entity}/{Chunk} with {Id}", entity, chunk, identity.Id);
     }
 
     /// <summary>
@@ -155,14 +162,16 @@ public class ChunkEntityService(ILogger<ChunkEntityService> logger, World world,
     /// <param name="radius">The radius defining the area around the grid where chunks are to be checked or loaded.</param>
     public void LoadChunksAroundGrid(ChunkService chunkService, Grid grid, int radius)
     {
-        var missingChunks = new List<Grid>(radius * 9);
-        GetMissingChunksAroundGrid(grid, radius, missingChunks.AsSpan());
+        Span<Grid> missingChunks = stackalloc Grid[radius * 9];
+        missingChunks.Fill(new Grid(-1,-1));  // Fill with invalid grids
+        GetMissingChunksAroundGrid(grid, radius, missingChunks);
 
         // Load missing chunks
-        var chunkDtos = chunkService.GetChunksByGridAsync(missingChunks).GetAwaiter().GetResult();
+        var missingChunksList = missingChunks.ToArray().Where(item => item.X != -1 && item.Y != -1).ToList();
+        var chunkDtos = chunkService.GetChunksByGridAsync(missingChunksList).GetAwaiter().GetResult();
         foreach (var chunkDto in chunkDtos)
         {
-            Create(chunkDto.Type, chunkDto);
+            Create(chunkDto);
         }
     }
     
@@ -174,19 +183,25 @@ public class ChunkEntityService(ILogger<ChunkEntityService> logger, World world,
     /// <param name="radius">The radius defining the area around the grid where chunks are to be checked or loaded.</param>
     public void CreateChunksAroundGrid(Grid grid, int radius)
     {
-        var missingChunks = new List<Grid>(radius * 9);
-        GetMissingChunksAroundGrid(grid, radius, missingChunks.AsSpan());
+        Span<Grid> missingChunks = stackalloc Grid[radius * 9];
+        missingChunks.Fill(new Grid(-1,-1));  // Fill with invalid grids
+        GetMissingChunksAroundGrid(grid, radius, missingChunks);
 
         // Load missing chunks
         foreach (var chunkGrid in missingChunks)
         {
-            Create("chunk:1", new ChunkDto
+            if (chunkGrid.Equals(new Grid(-1, -1)))
             {
-                Id = -1,
+                continue;
+            }
+            
+            Create( new ChunkDto
+            {
+                Id = 0,
                 Type = "chunk:1",
                 X = chunkGrid.X,
                 Y = chunkGrid.Y,
-                Characters = new HashSet<CharacterDto>(),
+                ContainedCharacters = new HashSet<CharacterDto>(),
                 CreatedDate = DateTime.Now
             });
         }

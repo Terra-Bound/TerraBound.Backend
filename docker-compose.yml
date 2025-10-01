@@ -2,7 +2,7 @@
 services:
   
   aspnet_backend:
-    image: aspnet.backend
+    image: aspnet.backend:latest
     container_name: aspnet_backend_app
     build:
       context: .
@@ -29,76 +29,76 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-        
-  # Prometheus for metrics
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
-    depends_on:
-      - otel-collector
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    command:
-      - --config.file=/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
       
-  # Tempo for tracing
-  tempo:
-    image: grafana/tempo:latest
-    container_name: tempo
-    depends_on:
-      - otel-collector
-    command: [ "-config.file=/etc/tempo.yml" ]
-    volumes:
-      - ./tempo.yml:/etc/tempo.yml
-      - ./tempo-data:/tmp/tempo  # Saving locally
-    ports:
-      - "3200:3200"  # Tempo Web-UI
-      - "4320:4317"  # OTLP gRPC
-      - "4321:4318"  # OTLP HTTP
-  
-  # Loki for Logs
-  loki:
-    image: grafana/loki:latest
-    container_name: loki
-    depends_on:
-      - otel-collector
-    ports:
-      - "3100:3100"
-    volumes:
-      - ./loki.yml:/etc/loki/local-config.yml
-    command: -config.file=/etc/loki/local-config.yml
+      # Prometheus for metrics
+      #prometheus:
+      #  image: prom/prometheus:latest
+      #  container_name: prometheus
+      #  depends_on:
+      #    - otel-collector
+      #  volumes:
+      #    - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      #  command:
+      #    - --config.file=/etc/prometheus/prometheus.yml
+      #  ports:
+      #    - "9090:9090"
     
+    # Tempo for tracing
+    #tempo:
+    #  image: grafana/tempo:latest
+    #  container_name: tempo
+    #  depends_on:
+    #    - otel-collector
+    #  command: [ "-config.file=/etc/tempo.yml" ]
+    #  volumes:
+    #    - ./tempo.yml:/etc/tempo.yml
+    #    - ./tempo-data:/tmp/tempo  # Saving locally
+    #  ports:
+    #    - "3200:3200"  # Tempo Web-UI
+    #    - "4320:4317"  # OTLP gRPC
+    #    - "4321:4318"  # OTLP HTTP
+    
+    # Loki for Logs
+    #loki:
+    #  image: grafana/loki:latest
+    #  container_name: loki
+    #  depends_on:
+    #    - otel-collector
+    #  ports:
+    #    - "3100:3100"
+    #  volumes:
+    #    - ./loki.yml:/etc/loki/local-config.yml
+    #  command: -config.file=/etc/loki/local-config.yml
+  
   # OTEL Collector to receive logs, metrics and traces from the application
-  otel-collector:
-    container_name: otel-collector
-    image: otel/opentelemetry-collector:latest
-    command: [ "--config=/etc/otel-collector.yml" ]
-    volumes:
-      - ./otel-collector.yml:/etc/otel-collector.yml
-    ports:
-      - "4317:4317"
-      - "4318:4318"
-      - "9201:9201"
+  #otel-collector:
+  #  container_name: otel-collector
+  #  image: otel/opentelemetry-collector:latest
+  #  command: [ "--config=/etc/otel-collector.yml" ]
+  #  volumes:
+  #    - ./otel-collector.yml:/etc/otel-collector.yml
+  #  ports:
+  #    - "4317:4317"
+  #    - "4318:4318"
+  #    - "9201:9201"
   
   # For dashboard, uses prometheus and tempo
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
-    depends_on:
-      - otel-collector
-      - prometheus
-      - tempo
-      - loki
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
-    volumes:
-      - grafana_data:/var/lib/grafana
+  #grafana:
+  #  image: grafana/grafana:latest
+  #  container_name: grafana
+  #  depends_on:
+  #    - otel-collector
+  #    - prometheus
+  #    - tempo
+  #    - loki
+  #  ports:
+  #    - "3000:3000"
+  #  environment:
+  #    - GF_SECURITY_ADMIN_USER=admin
+  #    - GF_SECURITY_ADMIN_PASSWORD=admin
+  #    - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
+  #  volumes:
+  #    - grafana_data:/var/lib/grafana
 
 volumes:
   postgres_data:

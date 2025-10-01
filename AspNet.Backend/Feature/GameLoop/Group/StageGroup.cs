@@ -26,9 +26,11 @@ public sealed class StageGroup(
     EntityMapper mapper,
     EntityService entityService,
     CharacterEntityService characterEntityService,
+    ChunkEntityService chunkEntityService,
     NetworkCommandService commandService
 ) : Group<float>(
     "StageGroup",
+    /*new ChunkSystem(logger, provider, world, chunkEntityService), */                                               // Load/Unload chunks
     new InitialisationSystem(logger, provider, world, entityService, characterEntityService, commandService),    // Initialize entities
     new CommandGroup(logger, world, mapper)                                                                      // Apply commands to entities and game
 );
@@ -169,17 +171,17 @@ public sealed partial class ChunkSystem(
 
     // TODO: Make this use commandbuffer, it adds components during query... thats forbidden
     /// <summary>
-    /// Keeps existing chunks alive or marks them for unloading
+    /// Ensures the specified chunk remains active or unloads it based on its state.
     /// </summary>
-    /// <param name="entity"></param>
-    /// <param name="chunk"></param>
+    /// <param name="entity">The entity associated with the chunk.</param>
+    /// <param name="chunkComponent">The chunk component to be evaluated and managed.</param>
     [Query, All<TerraBound.Core.Components.Chunk>, None<Destroy>]
-    private void KeepChunkAliveOrUnload(Entity entity, ref TerraBound.Core.Components.Chunk chunk)
+    private void KeepChunkAliveOrUnload(Entity entity, ref TerraBound.Core.Components.Chunk chunkComponent)
     {
-        chunkEntityService.KeepChunkAliveOrUnload(entity, chunk);
+        chunkEntityService.KeepChunkAliveOrUnload(entity, chunkComponent);
     }
 
-    /// TODO: Runs one loading query for each chunkloader, can be optimized by batching all requests 
+    // TODO: Runs one loading query for each chunkloader, can be optimized by batching all requests 
     /// <summary>
     /// Loads chunks existing around the chunkloaders.
     /// </summary>
@@ -240,7 +242,7 @@ public sealed partial class ChunkSystem(
             chunkEntityService.SwitchChunksForChunkLoader(entity, ref chunkLoader, grid, previousGrid);
         }
         
-        logger.LogDebug("Calculated chunk {X}/{Y} for {GUID} as {Entity}", grid.X, grid.Y, identity.Id, entity);
+        //logger.LogDebug("Calculated chunk {X}/{Y} for {GUID} as {Entity}", grid.X, grid.Y, identity.Id, entity);
     }
 
     

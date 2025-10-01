@@ -1,5 +1,6 @@
 using Arch.Core;
 using AspNet.Backend.Feature.GameLoop.Feature.Shared;
+using AspNet.Backend.Feature.Shared;
 using TerraBound.Core.Components;
 
 namespace AspNet.Backend.Feature.GameLoop.Feature.Entity;
@@ -26,6 +27,22 @@ public class EntityService(
     public bool AddEntity(int id, Arch.Core.Entity entity)
     {
         return mapper.TryAdd(id, entity);
+    }
+
+    /// <summary>
+    /// Adds an <see cref="Entity"/> using the given <see cref="Identity"/>.
+    /// <remarks>Assign a new unique id if the passed is below 0.</remarks>
+    /// </summary>
+    /// <param name="identity">The <see cref="Identity"/> reference which provides a unique identifier for the entity.</param>
+    /// <param name="entity">The instance of the <see cref="Arch.Core.Entity"/> to be added.</param>
+    /// <returns>True if the addition was successful, false otherwise.</returns>
+    public bool AddEntity(ref Identity identity, Arch.Core.Entity entity)
+    {
+        if (identity.Id <= 0)
+        {
+            identity.Id = (int)RandomExtensions.GetUniqueInt();
+        }
+        return mapper.TryAdd(identity.Id, entity);
     }
     
     /// <summary>
@@ -66,6 +83,6 @@ public class EntityService(
     /// <param name="entity">The passed <see cref="Entity"/></param>
     public void RemoveDestroyAfter(Arch.Core.Entity entity)
     {
-        world.Add(entity, new DestroyAfter{ Milliseconds = Constants.KeepAliveInMs });  // Destroy after 10 minutes
+        world.Remove<DestroyAfter>(entity); 
     }
 }

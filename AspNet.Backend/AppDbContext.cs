@@ -12,6 +12,7 @@ namespace AspNet.Backend;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<User>(options)
 {
+    public DbSet<IdentityModel> Identitys { get; set; }
     public DbSet<ChunkModel> Chunks { get; set; }
     public DbSet<CharacterModel> Characters { get; set; }
     
@@ -31,7 +32,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         
         
         // Identity config
-        modelBuilder.Entity<IdentityModel>(entity => { });
+        modelBuilder.Entity<IdentityModel>(entity =>
+        {
+            entity.HasKey(identity => identity.Id);
+            entity.Property(p => p.Id).ValueGeneratedNever();
+            entity.Property(p => p.Type).HasMaxLength(16).IsRequired();
+        });
         
         // Character config
         modelBuilder.Entity<CharacterModel>(entity =>
@@ -46,6 +52,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.OwnsOne(p => p.Transform); 
             
             // Relations
+            entity.HasOne(e => e.Chunk).WithMany(e => e.ContainedCharacters).IsRequired(false);
             entity.Navigation(c => c.User).AutoInclude();
         });
         
@@ -61,7 +68,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.HasIndex(c => new { c.X, c.Y }).IsUnique();
             
             // Relations
-            entity.Navigation(c => c.Characters).AutoInclude();
+            entity.HasMany(e => e.ContainedCharacters).WithOne(e => e.Chunk).IsRequired(false);
+            entity.Navigation(c => c.ContainedCharacters).AutoInclude();
         });
     }
     
