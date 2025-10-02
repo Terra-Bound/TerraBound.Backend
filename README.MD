@@ -1,18 +1,25 @@
 # ASP.NET Template with OpenTelemetry, PostgreSQL, and Svelte Frontend
 
 ## Overview
-This is an ASP.NET Core 8 Backend with OpenTelemetry integration for collecting metrics, traces, and logs.
-The grafana stack was implemented earlier but is currently disabled.
-The Backend features a basic authentication with Email-Notifications and the game simulation. 
+This the WIP ASP.NET Core 9 Backend & GameServer of Terra-Bound.
 
 The backend includes:
 - **Authentication** configurable in code.
+- **Emails** configurable via `appsettings.json`.
+- **GameLoop** as a BackgroundService that runs the game simulation.
+- **Networking** to establish UDP/TCP connection to the clients to send updates and receive inputs.
+- **Movement** velocity based movement of entities. 
+- **Chunks** grid based chunks being generated (WIP), loaded and saved. 
+- **Area of interest** Planned 
+- **Frontend** that is deployed along the backend to confirm the Email, request passwords and resetting them. 
+
+Following Technologies are used:
+- **[AspNet.Identity](https://learn.microsoft.com/de-de/aspnet/identity/overview/getting-started/introduction-to-aspnet-identity)** for authentication.
 - **[Arch-ECS](https://arch-ecs.gitbook.io/arch/)** as the ECS running the game simulation.
 - **[LiteNetLib](https://github.com/RevenantX/LiteNetLib)** for the UDP/TCP Client/Server communication.
 - **[Mapperly](https://mapperly.riok.app)** for mapping DTOs to Entities and vice versa.
 - **[Shared Core](https://github.com/Terra-Bound/TerraBound.Core)** a library with a set of classes and components shared between client & server.
 - **PostgreSQL** as the database with ASP.NET Identity.
-- **EmailSender** configurable via `appsettings.json`.
 - **Svelte frontend** located in the `/Frontend` folder, built via `npm build`, and automatically placed in `wwwroot`.
 - **Swagger** for API documentation.
 
@@ -92,17 +99,18 @@ Since grafana is deployed in docker (like the other services) you may not be abl
 4. Import a AspNet-Otel-Dashboard of your choice (or the one included in this project)
 
 ## Accessing Services
-| Service                   | URL                                          |
-|---------------------------|----------------------------------------------|
-| API (Swagger)             | http://localhost:8080/swagger                |
-| Svelte - Frontend         | http://localhost:8080                        |
-| Svelte - Reset Password   | http://localhost:8080/request-password       |
-| Svelte - Confirm Email    | http://localhost:8080/confirm-email          |
-| Svelte - Request Password | http://localhost:8080/request-password-reset |
-| Grafana                   | http://localhost:3000                        |
-| Prometheus (Metrics)      | http://localhost:9090                        |
-| Tempo (Traces)            | http://localhost:3200                        |
-| Loki (Logs)               | http://localhost:3100                        |
+| Service                                | URL                                          |
+|----------------------------------------|----------------------------------------------|
+| API (Swagger)                          | http://localhost:8080/swagger                |
+| Svelte - Frontend                      | http://localhost:8080                        |
+| Svelte - Reset Password                | http://localhost:8080/request-password       |
+| Svelte - Confirm Email                 | http://localhost:8080/confirm-email          |
+| Svelte - Request Password              | http://localhost:8080/request-password-reset |
+| Grafana                                | http://localhost:3000                        |
+| Prometheus (Metrics)                   | http://localhost:9090                        |
+| Tempo (Traces)                         | http://localhost:3200                        |
+| Loki (Logs)                            | http://localhost:3100                        |
+| GameServer (Networking via LiteNetLib) | http://localhost:9050                        |
 
 ## License
 Apache2.0 License
