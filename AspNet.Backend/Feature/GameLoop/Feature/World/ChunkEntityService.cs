@@ -10,6 +10,7 @@ using ChunkMapper = AspNet.Backend.Feature.GameLoop.Feature.Shared.ChunkMapper;
 
 namespace AspNet.Backend.Feature.GameLoop.Feature.Entity;
 
+// TODO: Or refactor so that chunks are no entities? 
 /// <summary>
 /// The <see cref="ChunkEntityService"/> class
 /// is a class responsible for creating, destroying and managing chunk entities.
@@ -20,6 +21,17 @@ namespace AspNet.Backend.Feature.GameLoop.Feature.Entity;
 /// <param name="chunkMapper">The <see cref="ChunkMapper"/>.</param>
 public class ChunkEntityService(ILogger<ChunkEntityService> logger, World world, EntityService entityService, ChunkMapper chunkMapper)
 {
+    /// <summary>
+    /// Calculates the grid position for a chunk based on the provided x and y coordinates.
+    /// </summary>
+    /// <param name="x">The x-coordinate in the world space.</param>
+    /// <param name="y">The y-coordinate in the world space.</param>
+    /// <returns>A <see cref="TerraBound.Core.Geo.Grid"/> representing the chunk's grid position.</returns>
+    public static Grid CalculateChunkGridFor(float x, float y)
+    {
+        return new Grid((int)(x / 1000), (int)(y / 1000));
+    }
+    
     /// <summary>
     /// Creates a default player/character <see cref="Entity"/>.
     /// </summary>
@@ -59,34 +71,6 @@ public class ChunkEntityService(ILogger<ChunkEntityService> logger, World world,
     }
 
     /// <summary>
-    /// Disposes an <see cref="Entity"/>s resources by removing it from the <see cref="EntityService"/> and other mappers.
-    /// <remarks>Does not destroy it.</remarks>
-    /// </summary>
-    /// <param name="entity">The instance.</param>
-    public void Dispose(Arch.Core.Entity entity)
-    {
-        ref var entityData = ref world.GetEntityData(entity);
-        ref var identity = ref entityData.Get<Identity>();
-        ref var chunk = ref entityData.Get<TerraBound.Core.Components.Chunk>();
-        
-        entityService.RemoveEntity(identity.Id);
-        chunkMapper.Remove(chunk.Grid);
-        
-        logger.LogInformation("Disposed Chunk: {Entity}/{Chunk} with {Id}", entity, chunk, identity.Id);
-    }
-
-    /// <summary>
-    /// Calculates the grid position for a chunk based on the provided x and y coordinates.
-    /// </summary>
-    /// <param name="x">The x-coordinate in the world space.</param>
-    /// <param name="y">The y-coordinate in the world space.</param>
-    /// <returns>A <see cref="TerraBound.Core.Geo.Grid"/> representing the chunk's grid position.</returns>
-    public static Grid CalculateChunkGridFor(float x, float y)
-    {
-        return new Grid((int)(x / 1000), (int)(y / 1000));
-    }
-    
-    /// <summary>
     /// Returns true if a chunk exists at the provided x and y coordinates.
     /// </summary>
     /// <param name="x">The x-coordinate in the world space.</param>
@@ -104,6 +88,23 @@ public class ChunkEntityService(ILogger<ChunkEntityService> logger, World world,
 
         chunkEntity = entity;
         return true;
+    }
+    
+    /// <summary>
+    /// Disposes an <see cref="Entity"/>s resources by removing it from the <see cref="EntityService"/> and other mappers.
+    /// <remarks>Does not destroy it.</remarks>
+    /// </summary>
+    /// <param name="entity">The instance.</param>
+    public void Dispose(Arch.Core.Entity entity)
+    {
+        ref var entityData = ref world.GetEntityData(entity);
+        ref var identity = ref entityData.Get<Identity>();
+        ref var chunk = ref entityData.Get<TerraBound.Core.Components.Chunk>();
+        
+        entityService.RemoveEntity(identity.Id);
+        chunkMapper.Remove(chunk.Grid);
+        
+        logger.LogInformation("Disposed Chunk: {Entity}/{Chunk} with {Id}", entity, chunk, identity.Id);
     }
 
     /// <summary>
@@ -205,6 +206,23 @@ public class ChunkEntityService(ILogger<ChunkEntityService> logger, World world,
                 CreatedDate = DateTime.Now
             });
         }
+    }
+
+    /// <summary>
+    /// Saves the created chunks using the specified chunk service.
+    /// </summary>
+    /// <param name="chunkService">The service used to persist chunk data.</param>
+    /// <param name="chunks">A collection of created chunks, represented by their identity and chunk component pair.</param>
+    public void SaveCreatedChunks(ChunkService chunkService, Span<(Identity, TerraBound.Core.Components.Chunk)> chunks)
+    {
+        foreach (var components in chunks)
+        {
+            var model = AspNet.Backend.Feature.Chunk.ChunkMapper.ToDto(components.Item1, components.Item2);
+            chunkService.CreateInBulkAsync(model);
+            logger.LogDebug("Saved {Chunk} with {Identity}", components.Item2, components.Item1);
+        }
+        
+        chunkService.SaveChangesInBulkAsync().GetAwaiter().GetResult();
     }
 
     /// <summary>

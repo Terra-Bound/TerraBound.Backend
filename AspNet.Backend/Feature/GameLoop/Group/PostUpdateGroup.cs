@@ -18,8 +18,8 @@ public sealed class PostUpdateGroup(
     ChunkEntityService chunkEntityService
 ) : Group<float>(
     "PostUpdateGroup",
-    new DatabaseGroup(dbLogger, serviceProvider, world),
-    new DisposeSystem(world, characterEntityService, chunkEntityService)    // Deinitialize entities
+    new DatabaseGroup(dbLogger, serviceProvider, world, chunkEntityService), // Save entities,
+    new DisposeSystem(world, characterEntityService, chunkEntityService)     // Deinitialize entities
 );
 
 /// <summary>

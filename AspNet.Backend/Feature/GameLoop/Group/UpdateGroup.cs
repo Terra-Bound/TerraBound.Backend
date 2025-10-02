@@ -22,9 +22,9 @@ public sealed class UpdateGroup(
     ServerNetworkService networkService
 ) : Group<float>(
     "UpdateGroup",
-    new ReactiveSystem(world),
-    new MovementSystem(logger, world),
-    new NetworkSystem(world, networkService)
+    new ReactiveSystem(world),                // Mark every new entity with Created for exactly one frame and then mark them with Alive
+    new MovementSystem(logger, world),        // Move entities by velocity
+    new NetworkSystem(world, networkService)  // Send Network updates to client
 );
 
 

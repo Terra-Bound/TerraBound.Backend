@@ -1,3 +1,4 @@
+using Arch.Buffer;
 using Arch.Core;
 using AspNet.Backend.Feature.GameLoop.Feature.Shared;
 using AspNet.Backend.Feature.Shared;
@@ -15,9 +16,23 @@ namespace AspNet.Backend.Feature.GameLoop.Feature.Entity;
 public class EntityService(
     ILogger<GameLoopService> logger,
     World world, 
+    CommandBuffer entityCommandBuffer,
     EntityMapper mapper
 )
 {
+    /// <summary>
+    /// Provides access to the <see cref="CommandBuffer"/> instance associated with the service,
+    /// allowing the execution of buffered entity commands in the context of the ECS (Entity Component System).
+    /// </summary>
+    /// <remarks>
+    /// The <c>EntityCommandBuffer</c> property is primarily used to queue operations such as creating, destroying, and modifying entities.
+    /// These operations are deferred until the buffer is executed, improving performance and ensuring thread safety. This particular buffer is executed before the <see cref="UpdateGroup"/>. 
+    /// </remarks>
+    public CommandBuffer EntityCommandBuffer
+    {
+        get => entityCommandBuffer;
+    }
+
     /// <summary>
     /// Adds an <see cref="Entity"/>.
     /// </summary>
@@ -74,7 +89,7 @@ public class EntityService(
     /// <param name="entity">The passed <see cref="Entity"/></param>
     public void AddDestroyAfter(Arch.Core.Entity entity)
     {
-        world.Add(entity, new DestroyAfter{ Milliseconds = Constants.KeepAliveInMs });  // Destroy after 10 minutes
+        entityCommandBuffer.Set(entity, new DestroyAfter{ Milliseconds = Constants.KeepAliveInMs });  // Destroy after 10 minutes
     }
     
     /// <summary>
@@ -83,6 +98,6 @@ public class EntityService(
     /// <param name="entity">The passed <see cref="Entity"/></param>
     public void RemoveDestroyAfter(Arch.Core.Entity entity)
     {
-        world.Remove<DestroyAfter>(entity); 
+        entityCommandBuffer.Remove<DestroyAfter>(entity);
     }
 }

@@ -1,4 +1,5 @@
 using System.Numerics;
+using Arch.Buffer;
 using Arch.Core;
 using Arch.Core.Extensions.Dangerous;
 using Arch.System;
@@ -23,17 +24,16 @@ public sealed class PreUpdateGroup(
     ILogger<GameLoopService> logger,
     IServiceProvider provider,
     World world,
-    EntityMapper mapper,
     EntityService entityService,
     CharacterEntityService characterEntityService,
     ChunkEntityService chunkEntityService,
     NetworkCommandService commandService
 ) : Group<float>(
     "PreUpdateGroup",
-    /*new ChunkSystem(logger, provider, world, chunkEntityService), */                                           // Load/Unload chunks
-    new PlayerCommandGroup(logger, provider, world, entityService, characterEntityService, commandService),    // Initialize entities
-    new MovementCommandGroup(logger, world, mapper),                                                                     // Apply commands to entities and game
-    new KeepAliveSystem(world)
+    /*new ChunkSystem(logger, provider, world, chunkEntityService), */                                         // Load/Unload chunks
+    new PlayerCommandGroup(logger, provider, world, entityService, characterEntityService, commandService),    // Apply player related commands, spawn in player, despawn player, etc.
+    new MovementCommandGroup(logger, world, entityService),                                                    // Apply commands to entities and game
+    new KeepAliveSystem(world, entityService.EntityCommandBuffer)                                              // Track keepalive state of entities and potentitally mark them for destruction
 );
 
 /// <summary>
@@ -131,11 +131,11 @@ public sealed partial class PlayerCommandGroup(
 /// is a system listening to certain events or networking commands to apply them to the ecs. 
 /// </summary>
 /// <param name="world">The <see cref="World"/>.</param>
-/// <param name="entityMapper">The <see cref="EntityMapper"/>.</param>
+/// <param name="entityService">The <see cref="EntityService"/>.</param>
 public sealed partial class MovementCommandGroup(
     ILogger<GameLoopService> logger,
     World world, 
-    EntityMapper entityMapper
+    EntityService entityService
 ) : BaseSystem<World, float>(world) 
 {
     /// <summary>
@@ -145,7 +145,8 @@ public sealed partial class MovementCommandGroup(
     [Query]
     private void OnDoubleClickMoveCharacter(in DoubleClickCommand command)
     {
-        var entity = entityMapper[command.Id];
+        entityService.TryGetEntity(command.Id, out var entity);
+        
         ref var movement = ref world.Get<Movement>(entity);
         ref var velocity = ref world.Get<Velocity>(entity);
         movement.Target = command.Position;
@@ -260,7 +261,8 @@ public sealed partial class ChunkSystem(
 /// </summary>
 /// <param name="world">The <see cref="World"/>.</param>
 public sealed partial class KeepAliveSystem(
-    World world
+    World world,
+    CommandBuffer commandBuffer
 ) : BaseSystem<World, float>(world)
 {
     /// <summary>
@@ -270,7 +272,7 @@ public sealed partial class KeepAliveSystem(
     /// <param name="entity">The entity.</param>
     /// <param name="keepAlive">Its remaining keepAlive.</param>
     [Query]
-    private void CalculateRemainingKeepAlive([Data] float deltaTime, Arch.Core.Entity entity, ref DestroyAfter keepAlive)
+    private void CalculateRemainingKeepAlive([Data] float deltaTime, Entity entity, ref DestroyAfter keepAlive)
     {
         var deltaMs = (int)(deltaTime * 1000f);
         keepAlive.Milliseconds -= deltaMs;
@@ -278,8 +280,8 @@ public sealed partial class KeepAliveSystem(
         // Mark for destroy
         if (keepAlive.Milliseconds <= 0)
         {
-            World.Remove<DestroyAfter>(entity);
-            World.Add<Destroy>(entity);
+            commandBuffer.Remove<DestroyAfter>(entity);
+            commandBuffer.Add<Destroy>(entity);
         }
     }
 }

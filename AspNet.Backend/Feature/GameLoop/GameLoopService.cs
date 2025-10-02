@@ -89,7 +89,7 @@ public class GameLoopService : BackgroundService
         _networkService.OnReceive<DoubleClickCommand>(_networkEventsService.OnDoubleClick, () => new DoubleClickCommand());
         
         // Services
-        _entityService = new EntityService(_logger, _world, _entityMapper);
+        _entityService = new EntityService(_logger, _world, _entityCommandBufferSystem.EntityCommandBuffer, _entityMapper);
         _characterEntityService = new CharacterEntityService(characterLogger, _world, _entityService, _userIdToEntityMapper);
         _chunkEntityService = new ChunkEntityService(chunkEntityLogger, _world, _entityService, _chunkMapper);
         
@@ -97,7 +97,7 @@ public class GameLoopService : BackgroundService
         _systems = new Group<float>(
             "Systems",
             _eventCommandBufferSystem,
-            new PreUpdateGroup(_logger, serviceProvider, _world, _entityMapper, _entityService, _characterEntityService, _chunkEntityService, _networkCommandService),
+            new PreUpdateGroup(_logger, serviceProvider, _world, _entityService, _characterEntityService, _chunkEntityService, _networkCommandService),
             _entityCommandBufferSystem,
             new UpdateGroup(_logger, _world, networkService),
             new PostUpdateGroup(_logger, dbLogger, serviceProvider, _world, _characterEntityService, _chunkEntityService)

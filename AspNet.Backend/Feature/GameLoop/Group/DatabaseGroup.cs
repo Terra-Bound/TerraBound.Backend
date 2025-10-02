@@ -3,7 +3,9 @@ using Arch.System;
 using Arch.System.SourceGenerator;
 using AspNet.Backend.Feature.Character;
 using AspNet.Backend.Feature.Chunk;
+using AspNet.Backend.Feature.GameLoop.Feature.Entity;
 using AspNet.Backend.Feature.Shared;
+using CommunityToolkit.HighPerformance;
 using TerraBound.Core.Components;
 
 namespace AspNet.Backend.Feature.GameLoop.Group;
@@ -18,10 +20,11 @@ namespace AspNet.Backend.Feature.GameLoop.Group;
 public sealed class DatabaseGroup(
     ILogger<DatabaseGroup> logger,
     IServiceProvider provider,
-    World world
+    World world,
+    ChunkEntityService chunkEntityService
 ) : Group<float>(
     "DatabaseGroup",
-    new SaveOnCreatedDatabaseSystem(logger, world, provider),
+    new SaveOnCreatedDatabaseSystem(logger, world, provider, chunkEntityService),
     new SaveOnDestroyDatabaseSystem(logger, world, provider),
     new IntervalGroup(60.0f, new IntervalDatabaseSystem(logger, world, provider))
 );
@@ -36,18 +39,18 @@ public sealed class DatabaseGroup(
 public sealed partial class SaveOnCreatedDatabaseSystem(
     ILogger<DatabaseGroup> logger,
     World world,
-    IServiceProvider serviceProvider) : BaseSystem<World, float>(world)
+    IServiceProvider serviceProvider,
+    ChunkEntityService chunkEntityService
+) : BaseSystem<World, float>(world)
 {
-    private Scoped<ChunkService> ChunkService { get; set; } = new(serviceProvider);
+    private Scoped<ChunkService> ChunkService { get; } = new(serviceProvider);
+    private List<(Identity, TerraBound.Core.Components.Chunk)> CreatedChunks { get; } = new(64);
 
     [Query]
     [All<Created>, None<Destroy>]
     private void SaveChunksOnCreated(in Identity identity, in TerraBound.Core.Components.Chunk chunkComponent)
     {
-        // Add to service
-        var model = ChunkMapper.ToDto(identity, chunkComponent);   
-        ChunkService.Value.CreateInBulkAsync(model);
-        logger.LogDebug("Saved {Chunk} with {Identity}", chunkComponent, identity);
+        CreatedChunks.Add((identity, chunkComponent));
     }
     
     public override void AfterUpdate(in float t)
@@ -60,7 +63,7 @@ public sealed partial class SaveOnCreatedDatabaseSystem(
             return;
         }
         
-        ChunkService.Value.SaveChangesInBulkAsync().GetAwaiter().GetResult();
+        chunkEntityService.SaveCreatedChunks(ChunkService.Value, CreatedChunks.AsSpan());
         ChunkService.Dispose();
         logger.LogInformation("Saved created instances");
     }
