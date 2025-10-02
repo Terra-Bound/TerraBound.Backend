@@ -30,7 +30,7 @@ public sealed class PreUpdateGroup(
     NetworkCommandService commandService
 ) : Group<float>(
     "PreUpdateGroup",
-    /*new ChunkSystem(logger, provider, world, chunkEntityService), */                                         // Load/Unload chunks
+    new ChunkSystem(logger, provider, world, chunkEntityService),                                              // Load/Unload chunks
     new PlayerCommandGroup(logger, provider, world, entityService, characterEntityService, commandService),    // Apply player related commands, spawn in player, despawn player, etc.
     new MovementCommandGroup(logger, world, entityService),                                                    // Apply commands to entities and game
     new KeepAliveSystem(world, entityService.EntityCommandBuffer)                                              // Track keepalive state of entities and potentitally mark them for destruction

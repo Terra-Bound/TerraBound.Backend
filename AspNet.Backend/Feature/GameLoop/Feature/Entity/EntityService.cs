@@ -89,7 +89,7 @@ public class EntityService(
     /// <param name="entity">The passed <see cref="Entity"/></param>
     public void AddDestroyAfter(Arch.Core.Entity entity)
     {
-        entityCommandBuffer.Set(entity, new DestroyAfter{ Milliseconds = Constants.KeepAliveInMs });  // Destroy after 10 minutes
+        entityCommandBuffer.Add(entity, new DestroyAfter{ Milliseconds = Constants.KeepAliveInMs });  // Destroy after 10 minutes
     }
     
     /// <summary>
